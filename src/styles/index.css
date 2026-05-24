@@ -1,0 +1,70 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media print {
+  /* Hide sidebars, navigation panels, and interactive elements */
+  aside, 
+  nav, 
+  header, 
+  footer, 
+  button, 
+  select, 
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset main layouts to fit single print page beautifully */
+  body, 
+  main, 
+  .min-h-screen, 
+  .bg-slate-50, 
+  .bg-slate-50\/30 {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+  }
+
+  /* Preserve colors/backgrounds of badges and important headers when printed */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Card styling for clean printing */
+  .bg-white, 
+  .bg-card, 
+  .rounded-xl, 
+  .rounded-\[2rem\] {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    page-break-inside: avoid;
+  }
+
+  /* Prevent elements from getting cut off on page edges */
+  h1, h2, h3, h4, h5, tr, table {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure text columns expand fully on printable sheets */
+  .max-w-7xl, 
+  .max-w-lg, 
+  .max-w-2xl {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

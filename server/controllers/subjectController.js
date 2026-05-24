@@ -111,3 +111,49 @@ exports.deleteSubject = asyncHandler(async (req, res) => {
 
   sendResponse(res, HTTP_STATUS.OK, null, 'Subject deleted successfully');
 });
+
+// @desc    Add study material to a subject
+// @route   POST /api/subjects/:id/materials
+// @access  Private (Teacher or Admin)
+exports.addStudyMaterial = asyncHandler(async (req, res) => {
+  const { title, type, url } = req.body;
+  if (!title || !type || !url) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: 'Please provide title, type (PDF/Video/Link), and url'
+    });
+  }
+
+  const subject = await Subject.findById(req.params.id);
+  if (!subject) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      success: false,
+      message: 'Subject not found'
+    });
+  }
+
+  subject.studyMaterials.push({ title, type, url });
+  await subject.save();
+
+  sendResponse(res, HTTP_STATUS.OK, subject, 'Study material added successfully');
+});
+
+// @desc    Delete study material from a subject
+// @route   DELETE /api/subjects/:id/materials/:materialId
+// @access  Private (Teacher or Admin)
+exports.deleteStudyMaterial = asyncHandler(async (req, res) => {
+  const subject = await Subject.findById(req.params.id);
+  if (!subject) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      success: false,
+      message: 'Subject not found'
+    });
+  }
+
+  subject.studyMaterials = subject.studyMaterials.filter(
+    (m) => m._id.toString() !== req.params.materialId.toString()
+  );
+  await subject.save();
+
+  sendResponse(res, HTTP_STATUS.OK, subject, 'Study material deleted successfully');
+});

@@ -141,9 +141,36 @@ const seedDatabase = async () => {
 
     // 6. Seed Students
     const studentDocsData = [
-      { user: aarav1._id, studentId: 'STU-2026-0142', class: class10A._id, rollNumber: '15' },
-      { user: aarav2._id, studentId: 'STU-2026-0142-2', class: class10A._id, rollNumber: '15' },
-      { user: rohan._id, studentId: 'STU-2026-0143', class: class10B._id, rollNumber: '1' }
+      { 
+        user: aarav1._id, 
+        studentId: 'STU-2026-0142', 
+        class: class10A._id, 
+        rollNumber: '15',
+        status: 'Active',
+        medicalRecords: [{ condition: 'Asthma', severity: 'Medium', notes: 'Carries inhaler in school bag.' }],
+        certificates: [{ name: 'Grade 9 Scholar Badge', fileUrl: '/uploads/certificates/scholar_badge.pdf', uploadDate: new Date() }],
+        academicHistory: [{ schoolName: 'Greenwood Academy', classPassed: 'Grade 9', marksPercentage: 94.5, passingYear: '2025' }]
+      },
+      { 
+        user: aarav2._id, 
+        studentId: 'STU-2026-0142-2', 
+        class: class10A._id, 
+        rollNumber: '16',
+        status: 'Active',
+        medicalRecords: [],
+        certificates: [],
+        academicHistory: []
+      },
+      { 
+        user: rohan._id, 
+        studentId: 'STU-2026-0143', 
+        class: class10B._id, 
+        rollNumber: '1',
+        status: 'Active',
+        medicalRecords: [{ condition: 'Peanut Allergy', severity: 'High', notes: 'Severe allergy. Avoid contact with nuts.' }],
+        certificates: [{ name: 'State Coding Championship', fileUrl: '/uploads/certificates/coding_champ.pdf', uploadDate: new Date() }],
+        academicHistory: [{ schoolName: 'St. Xavier High School', classPassed: 'Grade 9', marksPercentage: 88.2, passingYear: '2025' }]
+      }
     ];
     const students = await Student.insertMany(studentDocsData);
     console.log('✔ Seeded Students');

@@ -51,6 +51,21 @@ const subjectSchema = new mongoose.Schema(
       default: 'Core',
     },
     description: String,
+    studyMaterials: [
+      {
+        title: { type: String, required: true },
+        type: {
+          type: String,
+          enum: ['PDF', 'Video', 'Link'],
+          required: true,
+        },
+        url: { type: String, required: true },
+        uploadedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

@@ -102,6 +102,10 @@ class StudentService {
     return await Student.find(filter)
       .populate('user', 'name email')
       .populate('class', 'name section')
+      .populate({
+        path: 'parentIds',
+        populate: { path: 'user', select: 'name email' }
+      })
       .sort('rollNumber');
   }
 }

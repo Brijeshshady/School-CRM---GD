@@ -49,9 +49,9 @@ class DashboardService {
         color: 'text-emerald-600',
         bg: 'bg-emerald-100'
       })),
-      ...(await Grade.find({ student: studentId }).sort({ createdAt: -1 }).limit(2).lean()).map(g => ({
+      ...(await Grade.find({ student: studentId }).populate('subject', 'name').sort({ createdAt: -1 }).limit(2).lean()).map(g => ({
         type: 'grade',
-        msg: `Grade posted for ${g.subject}`,
+        msg: `Grade posted for ${g.subject ? g.subject.name : 'Subject'}`,
         time: g.createdAt,
         color: 'text-purple-600',
         bg: 'bg-purple-100'
@@ -105,7 +105,7 @@ class DashboardService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const classesWithAttendance = await Attendance.distinct('class', { date: { $gte: today } });
-    const pendingAttendance = classes.filter(c => !classesWithAttendance.includes(c._id.toString())).length;
+    const pendingAttendance = classes.filter(c => !classesWithAttendance.some(id => id.toString() === c._id.toString())).length;
 
     // 4. Total Students
     const totalAssignedStudents = await Student.countDocuments({

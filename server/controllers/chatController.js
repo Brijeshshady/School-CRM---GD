@@ -53,8 +53,8 @@ exports.getConversations = asyncHandler(async (req, res) => {
 
   // Sort by pinnedBy first, then by updatedAt
   const sortedConversations = filteredConversations.sort((a, b) => {
-    const aPinned = a.pinnedBy && a.pinnedBy.includes(req.user._id);
-    const bPinned = b.pinnedBy && b.pinnedBy.includes(req.user._id);
+    const aPinned = a.pinnedBy && a.pinnedBy.some(id => id.toString() === req.user._id.toString());
+    const bPinned = b.pinnedBy && b.pinnedBy.some(id => id.toString() === req.user._id.toString());
     
     if (aPinned && !bPinned) return -1;
     if (!aPinned && bPinned) return 1;
@@ -107,7 +107,7 @@ exports.sendMessage = asyncHandler(async (req, res) => {
 
   if (conversationId) {
     conversation = await Conversation.findById(conversationId);
-    if (req.user.role !== ROLES.ADMIN && !conversation.participants.includes(req.user._id)) {
+    if (req.user.role !== ROLES.ADMIN && !conversation.participants.some(id => id.toString() === req.user._id.toString())) {
         res.status(HTTP_STATUS.FORBIDDEN);
         throw new Error('Not authorized to send message in this conversation');
     }
@@ -229,7 +229,7 @@ exports.togglePinConversation = asyncHandler(async (req, res) => {
     throw new Error('Conversation not found');
   }
 
-  if (req.user.role !== ROLES.ADMIN && !conversation.participants.includes(req.user._id)) {
+  if (req.user.role !== ROLES.ADMIN && !conversation.participants.some(id => id.toString() === req.user._id.toString())) {
     res.status(HTTP_STATUS.FORBIDDEN);
     throw new Error('Not authorized to access this conversation');
   }
@@ -238,7 +238,7 @@ exports.togglePinConversation = asyncHandler(async (req, res) => {
     conversation.pinnedBy = [];
   }
 
-  const isPinned = conversation.pinnedBy.includes(req.user._id);
+  const isPinned = conversation.pinnedBy && conversation.pinnedBy.some(id => id.toString() === req.user._id.toString());
 
   if (isPinned) {
     conversation.pinnedBy = conversation.pinnedBy.filter(

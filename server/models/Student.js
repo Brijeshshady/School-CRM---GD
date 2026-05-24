@@ -38,6 +38,39 @@ const studentSchema = new mongoose.Schema(
       state: String,
       zipCode: String,
     },
+    status: {
+      type: String,
+      enum: ['Active', 'Suspended', 'Transferred', 'Alumni'],
+      default: 'Active',
+    },
+    medicalRecords: [
+      {
+        condition: String,
+        severity: {
+          type: String,
+          enum: ['Low', 'Medium', 'High'],
+        },
+        notes: String,
+      },
+    ],
+    certificates: [
+      {
+        name: String,
+        fileUrl: String,
+        uploadDate: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    academicHistory: [
+      {
+        schoolName: String,
+        classPassed: String,
+        marksPercentage: Number,
+        passingYear: String,
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

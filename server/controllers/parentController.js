@@ -81,7 +81,7 @@ exports.getStudentData = asyncHandler(async (req, res) => {
   }).sort({ createdAt: -1 });
 
   // 5. Fetch Fees
-  const fees = await Fee.find({ student: studentId_ref }).sort({ dueDate: 1 });
+  const fees = await Fee.find({ student: studentProfile.user._id }).sort({ dueDate: 1 });
 
   // 6. Fetch Schedule
   let schedule = [];

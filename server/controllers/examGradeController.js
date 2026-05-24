@@ -120,7 +120,8 @@ exports.getExamGrades = asyncHandler(async (req, res) => {
     }
     // If a specific studentId is passed, verify parent linked relation
     if (studentId) {
-      if (!parent.studentIds.includes(studentId)) {
+      const isLinked = parent.studentIds.some(id => id.toString() === studentId.toString());
+      if (!isLinked) {
         res.status(HTTP_STATUS.FORBIDDEN);
         throw new Error('Not authorized to access grades of this student');
       }
@@ -436,7 +437,8 @@ exports.getStudentAnalytics = asyncHandler(async (req, res) => {
     }
   } else if (req.user.role === 'Parent') {
     const parent = await Parent.findOne({ user: req.user._id });
-    if (!parent || !parent.studentIds.includes(studentId)) {
+    const isLinked = parent && parent.studentIds.some(id => id.toString() === studentId.toString());
+    if (!parent || !isLinked) {
       res.status(HTTP_STATUS.FORBIDDEN);
       throw new Error('Not authorized to access linked student analytics');
     }
@@ -550,8 +552,7 @@ exports.generateReportCard = asyncHandler(async (req, res) => {
       subjectMap[subId] = {
         subject: g.subject._id,
         examMarks: [],
-        totalObtained: 0,
-        totalMax: 0
+        gradesList: []
       };
     }
 
@@ -565,13 +566,48 @@ exports.generateReportCard = asyncHandler(async (req, res) => {
       grade: g.grade
     });
 
-    subjectMap[subId].totalObtained += g.totalObtained;
-    subjectMap[subId].totalMax += g.totalMax;
+    subjectMap[subId].gradesList.push(g);
   });
 
-  // Calculate subject final average and build list
+  const getExamGroup = (examType) => {
+    const code = (examType?.code || '').toLowerCase();
+    const name = (examType?.name || '').toLowerCase();
+
+    if (code === 'annual' || name.includes('annual') || name.includes('final')) {
+      return 3; // 50%
+    }
+    if (code === 'midterm' || code === 'half_yearly' || name.includes('mid') || name.includes('half')) {
+      return 2; // 30%
+    }
+    return 1; // 20%
+  };
+
+  // Calculate subject final average using grading weightage (20% Unit Test + 30% Midterm + 50% Final Exam)
   const subjectGrades = Object.values(subjectMap).map(sub => {
-    const subPct = sub.totalMax > 0 ? parseFloat(((sub.totalObtained / sub.totalMax) * 100).toFixed(2)) : 0;
+    const groupSum = { 1: 0, 2: 0, 3: 0 };
+    const groupCount = { 1: 0, 2: 0, 3: 0 };
+
+    sub.gradesList.forEach(g => {
+      const group = getExamGroup(g.examType);
+      const pct = g.totalMax > 0 ? (g.totalObtained / g.totalMax) * 100 : 0;
+      groupSum[group] += pct;
+      groupCount[group] += 1;
+    });
+
+    let totalWeight = 0;
+    let weightedSum = 0;
+
+    for (let g = 1; g <= 3; g++) {
+      if (groupCount[g] > 0) {
+        const avg = groupSum[g] / groupCount[g];
+        const weight = g === 1 ? 20 : g === 2 ? 30 : 50;
+        totalWeight += weight;
+        weightedSum += avg * weight;
+      }
+    }
+
+    const subPct = totalWeight > 0 ? parseFloat((weightedSum / totalWeight).toFixed(2)) : 0;
+
     let subGrade = 'F';
     if (subPct >= 90) subGrade = 'A+';
     else if (subPct >= 80) subGrade = 'A';
@@ -598,31 +634,64 @@ exports.generateReportCard = asyncHandler(async (req, res) => {
   const gpa = parseFloat(ExamGrade.calculateGPA(overallPercentage).toFixed(2));
   const cgpa = gpa; // Simple representation
 
-  // 4. Calculate Rank and Percentile compared to classmates
-  // Find all students in class
+  // 4. Calculate Rank and Percentile compared to classmates using the same weightage calculation
   const classStudents = await Student.find({ class: classId });
   const classPercentages = [];
 
-  for (const stud of classStudents) {
+  const calculateStudentOverallWeighted = async (studId) => {
     const studGrades = await ExamGrade.find({
-      student: stud._id,
+      student: studId,
       class: classId,
       academicYear: academicYear || '2025-2026',
       status: 'published'
+    }).populate('examType');
+
+    if (studGrades.length === 0) return 0;
+
+    // Group by subject
+    const studSubMap = {};
+    studGrades.forEach(g => {
+      const subId = g.subject.toString();
+      if (!studSubMap[subId]) studSubMap[subId] = [];
+      studSubMap[subId].push(g);
     });
 
-    if (studGrades.length > 0) {
-      let totObt = 0;
-      let totMx = 0;
-      studGrades.forEach(g => {
-        totObt += g.totalObtained;
-        totMx += g.totalMax;
+    const subPcts = Object.values(studSubMap).map(exams => {
+      const groupSum = { 1: 0, 2: 0, 3: 0 };
+      const groupCount = { 1: 0, 2: 0, 3: 0 };
+
+      exams.forEach(g => {
+        const group = getExamGroup(g.examType);
+        const pct = g.totalMax > 0 ? (g.totalObtained / g.totalMax) * 100 : 0;
+        groupSum[group] += pct;
+        groupCount[group] += 1;
       });
-      const pct = totMx > 0 ? parseFloat(((totObt / totMx) * 100).toFixed(2)) : 0;
-      classPercentages.push({ studentId: stud._id.toString(), percentage: pct });
-    } else {
-      classPercentages.push({ studentId: stud._id.toString(), percentage: 0 });
-    }
+
+      let totalWeight = 0;
+      let weightedSum = 0;
+
+      for (let g = 1; g <= 3; g++) {
+        if (groupCount[g] > 0) {
+          const avg = groupSum[g] / groupCount[g];
+          const weight = g === 1 ? 20 : g === 2 ? 30 : 50;
+          totalWeight += weight;
+          weightedSum += avg * weight;
+        }
+      }
+
+      return totalWeight > 0 ? weightedSum / totalWeight : 0;
+    });
+
+    if (subPcts.length === 0) return 0;
+    return subPcts.reduce((sum, p) => sum + p, 0) / subPcts.length;
+  };
+
+  for (const stud of classStudents) {
+    const pct = await calculateStudentOverallWeighted(stud._id);
+    classPercentages.push({ 
+      studentId: stud._id.toString(), 
+      percentage: parseFloat(pct.toFixed(2)) 
+    });
   }
 
   // Sort class percentages descending to find rank
@@ -757,7 +826,8 @@ exports.getReportCards = asyncHandler(async (req, res) => {
       throw new Error('Parent profile not found');
     }
     if (studentId) {
-      if (!parent.studentIds.includes(studentId)) {
+      const isLinked = parent.studentIds.some(id => id.toString() === studentId.toString());
+      if (!isLinked) {
         res.status(HTTP_STATUS.FORBIDDEN);
         throw new Error('Not authorized to access linked student report card');
       }

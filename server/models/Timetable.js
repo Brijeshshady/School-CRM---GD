@@ -21,8 +21,17 @@ const timetableSchema = new mongoose.Schema({
     startTime: String,
     endTime: String,
     subject: String,
-    teacher: String,
-    room: String
+    teacher: String, // Original teacher name/ID
+    teacherId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Teacher',
+    },
+    room: String,
+    substituteTeacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Teacher',
+    },
+    substituteTeacherName: String,
   }],
   status: {
     type: String,

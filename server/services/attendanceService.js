@@ -17,16 +17,32 @@ class AttendanceService {
       throw new Error('Not authorized to submit attendance for this class');
     }
 
-    // 2. Process Records
-    const attendanceData = records.map(record => ({
-      ...record,
-      class: classId,
-      recordedBy: userId,
-      date: record.date || new Date()
-    }));
+    // 2. Process Records with upsert to prevent unique constraint crashes and support edits
+    const savedRecords = [];
+    for (const record of records) {
+      const dateVal = record.date ? new Date(record.date) : new Date();
+      dateVal.setHours(12, 0, 0, 0); // Normalize time components
+      const period = record.period || 'Daily';
 
-    // In a real app, we might use a bulkWrite or updateMany here
-    return await Attendance.insertMany(attendanceData);
+      const updatedRecord = await Attendance.findOneAndUpdate(
+        { student: record.student, date: dateVal, period },
+        {
+          student: record.student,
+          class: classId,
+          date: dateVal,
+          period,
+          status: record.status,
+          remarks: record.remarks || '',
+          recordedBy: userId,
+          type: record.type || 'Daily',
+          mode: record.mode || 'Offline',
+        },
+        { upsert: true, new: true }
+      );
+      savedRecords.push(updatedRecord);
+    }
+
+    return savedRecords;
   }
 
   async getClassAttendance(userId, classId) {

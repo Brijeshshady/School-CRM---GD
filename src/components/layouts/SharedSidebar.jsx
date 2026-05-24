@@ -21,11 +21,33 @@ export const SharedSidebar = ({ sidebarOpen, setSidebarOpen, menuItems, roleName
 
   // Find the single most specific active item
   const getActiveItemId = () => {
+    // 1. Direct path/prefix matching (most specific first)
     const sortedItems = [...menuItems].sort((a, b) => b.path.length - a.path.length);
     const active = sortedItems.find(item => 
       currentPath === item.path || (item.path !== '/' && currentPath.startsWith(item.path + '/'))
     );
-    return active?.id;
+    if (active) return active.id;
+
+    // 2. Base-segment matching fallback (for aligned routes like /students vs /admin/dashboard/students)
+    const pathSegments = currentPath.split('/').filter(Boolean);
+    if (pathSegments.length > 0) {
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      
+      const matchBySegment = menuItems.find(item => {
+        const itemSegments = item.path.split('/').filter(Boolean);
+        const itemLastSegment = itemSegments[itemSegments.length - 1];
+        return (
+          item.id === lastSegment || 
+          itemLastSegment === lastSegment || 
+          (lastSegment === 'tickets' && item.id === 'support') ||
+          (lastSegment === 'support' && item.id === 'tickets') ||
+          (lastSegment === 'chat' && item.id === 'communications') ||
+          (lastSegment === 'communications' && item.id === 'chat')
+        );
+      });
+      if (matchBySegment) return matchBySegment.id;
+    }
+    return undefined;
   };
 
   const activeId = getActiveItemId();

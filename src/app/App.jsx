@@ -69,6 +69,9 @@ import { FeesManagement } from "./pages/management/FeesManagement";
 import { ReportsAnalytics } from "./pages/management/ReportsAnalytics";
 import { Settings } from "./pages/management/Settings";
 import { NotificationCenter } from "../features/notifications/components/NotificationCenter";
+import LeaveRequestForm from "./pages/teacher/LeaveRequestForm";
+import AdminLeaveApprovals from "./pages/admin/AdminLeaveApprovals";
+import LMSDashboard from "./pages/management/LMSDashboard";
 
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -165,6 +168,7 @@ const AppContent = () => {
         <Route path="tickets" element={<AdminTicketManagement />} />
         <Route path="timetable-approvals" element={<AdminTimetableApprovals />} />
         <Route path="gradebook" element={<AdminGradebook />} />
+        <Route path="leaves" element={<AdminLeaveApprovals />} />
         <Route path="chat" element={<ChatInterface />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
@@ -181,6 +185,8 @@ const AppContent = () => {
         <Route path="assignments" element={<TeacherAssignments />} />
         <Route path="grades" element={<TeacherGrades />} />
         <Route path="chat" element={<ChatInterface />} />
+        <Route path="leaves" element={<LeaveRequestForm />} />
+        <Route path="support" element={<SupportTickets />} />
       </Route>
       
       {
@@ -205,6 +211,7 @@ const AppContent = () => {
   }
         <Route path="support" element={<SupportTickets />} />
         <Route path="reports" element={<ReportsAnalytics />} />
+        <Route path="lms" element={<LMSDashboard />} />
         <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="/notifications" element={<ProtectedRoute allowedRoles={["Student", "Parent", "Admin", "SuperAdmin", "Teacher", "Staff"]}><NotificationCenter /></ProtectedRoute>} />

@@ -26,6 +26,20 @@ const attendanceSchema = new mongoose.Schema(
       enum: Object.values(ATTENDANCE_STATUS),
       default: ATTENDANCE_STATUS.PRESENT,
     },
+    period: {
+      type: String,
+      default: 'Daily',
+    },
+    type: {
+      type: String,
+      enum: ['Daily', 'Period'],
+      default: 'Daily',
+    },
+    mode: {
+      type: String,
+      enum: ['Online', 'Offline'],
+      default: 'Offline',
+    },
     remarks: String,
     recordedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -38,8 +52,8 @@ const attendanceSchema = new mongoose.Schema(
   }
 );
 
-// Compound index to prevent duplicate attendance for the same student on the same day
-attendanceSchema.index({ student: 1, date: 1 }, { unique: true });
+// Compound index to prevent duplicate attendance for the same student, day, and period
+attendanceSchema.index({ student: 1, date: 1, period: 1 }, { unique: true });
 attendanceSchema.index({ class: 1, date: 1 });
 
 const Attendance = mongoose.model('Attendance', attendanceSchema);

@@ -21,6 +21,8 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const examGradeRoutes = require('./routes/examGradeRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
+const quizRoutes = require('./routes/quizRoutes');
 
 
 
@@ -42,6 +44,11 @@ require('./models/Notification');
 require('./models/ExamType');
 require('./models/ExamGrade');
 require('./models/ReportCard');
+require('./models/LeaveRequest');
+require('./models/Quiz');
+require('./models/Question');
+require('./models/QuizAttempt');
+require('./models/Substitution');
 
 
 // Initialize express app
@@ -84,6 +91,8 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/timetables', timetableRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/exam-grades', examGradeRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/quizzes', quizRoutes);
 
 
 

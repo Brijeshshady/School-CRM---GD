@@ -22,11 +22,35 @@ const classSchema = new mongoose.Schema(
     },
     roomNumber: String,
     academicYear: String,
-    capacity: Number,
+    capacity: {
+      type: Number,
+      default: 40,
+    },
+    stream: {
+      type: String,
+      enum: ['Science', 'Commerce', 'Arts', 'General'],
+      default: 'General',
+    },
+    batch: {
+      type: String,
+      default: '2026-2027',
+    },
     subjects: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Subject'
     }],
+    subjectTeachers: [
+      {
+        subject: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Subject',
+        },
+        teacher: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Teacher',
+        },
+      },
+    ],
     isActive: {
       type: Boolean,
       default: true,

@@ -48,7 +48,7 @@ exports.submitAttendance = asyncHandler(async (req, res) => {
         });
         
         // If absent, send warning to parents
-        if (record.status === 'absent' && student.parentIds && student.parentIds.length > 0) {
+        if (record.status?.toLowerCase() === 'absent' && student.parentIds && student.parentIds.length > 0) {
           for (const parent of student.parentIds) {
             const parentUser = await mongoose.model('Parent').findById(parent).populate('user');
             if (parentUser && parentUser.user) {

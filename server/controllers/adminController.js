@@ -212,6 +212,10 @@ exports.updateUser = asyncHandler(async (req, res) => {
       if (student) {
         if (req.body.studentId) student.studentId = req.body.studentId;
         if (req.body.rollNumber) student.rollNumber = req.body.rollNumber;
+        if (req.body.status) student.status = req.body.status;
+        if (req.body.medicalRecords) student.medicalRecords = req.body.medicalRecords;
+        if (req.body.certificates) student.certificates = req.body.certificates;
+        if (req.body.academicHistory) student.academicHistory = req.body.academicHistory;
         if (req.body.class) {
           student.class = req.body.class;
           try {
@@ -451,7 +455,9 @@ exports.linkParentStudent = asyncHandler(async (req, res) => {
   }
 
   // Check for duplicate link
-  if (parent.studentIds.includes(studentId) || student.parentIds.includes(parentId)) {
+  const parentAlreadyLinked = parent.studentIds.some(id => id.toString() === studentId.toString());
+  const studentAlreadyLinked = student.parentIds.some(id => id.toString() === parentId.toString());
+  if (parentAlreadyLinked || studentAlreadyLinked) {
     res.status(HTTP_STATUS.BAD_REQUEST);
     throw new Error('Relationship already exists');
   }
@@ -557,7 +563,8 @@ exports.linkTeacherStudent = asyncHandler(async (req, res) => {
   // Add students to teacher's assignedStudents array if not already present
   let addedCount = 0;
   for (const studentId of studentIds) {
-    if (!teacher.assignedStudents.includes(studentId)) {
+    const isAssigned = teacher.assignedStudents.some(id => id.toString() === studentId.toString());
+    if (!isAssigned) {
       teacher.assignedStudents.push(studentId);
       addedCount++;
     }

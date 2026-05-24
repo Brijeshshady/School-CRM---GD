@@ -28,6 +28,8 @@ export const AdminLayout = () => {
     { id: "classes", path: "/admin/dashboard/classes", label: "Classes", icon: Book },
     { id: "subjects", path: "/admin/dashboard/subjects", label: "Subject Management", icon: Book },
     { id: "timetable", path: "/admin/dashboard/timetable-approvals", label: "Timetable Approvals", icon: Calendar },
+    { id: "leaves", path: "/admin/dashboard/leaves", label: "Leave Approvals", icon: Calendar },
+    { id: "lms", path: "/lms", label: "LMS & Quizzes", icon: Book },
     { id: "gradebook", path: "/admin/dashboard/gradebook", label: "Gradebook", icon: Award },
     { id: "fees", path: "/admin/dashboard/fees", label: "Fees & Payments", icon: DollarSign },
     { id: "reports", path: "/admin/dashboard/reports", label: "Reports", icon: BarChart3 },

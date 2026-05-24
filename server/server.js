@@ -23,6 +23,11 @@ const subjectRoutes = require('./routes/subjectRoutes');
 const examGradeRoutes = require('./routes/examGradeRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const quizRoutes = require('./routes/quizRoutes');
+const leadRoutes = require('./routes/leadRoutes');
+const financeRoutes = require('./routes/financeRoutes');
+const auxiliaryRoutes = require('./routes/auxiliaryRoutes');
+const hrRoutes = require('./routes/hrRoutes');
+const visitorRoutes = require('./routes/visitorRoutes');
 
 
 
@@ -49,6 +54,13 @@ require('./models/Quiz');
 require('./models/Question');
 require('./models/QuizAttempt');
 require('./models/Substitution');
+require('./models/Lead');
+require('./models/Expense');
+require('./models/LibraryItem');
+require('./models/HostelRoom');
+require('./models/VehicleRoute');
+require('./models/StaffPayroll');
+require('./models/Visitor');
 
 
 // Initialize express app
@@ -93,6 +105,11 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/exam-grades', examGradeRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/auxiliary', auxiliaryRoutes);
+app.use('/api/hr', hrRoutes);
+app.use('/api/visitors', visitorRoutes);
 
 
 

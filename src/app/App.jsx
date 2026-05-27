@@ -6,72 +6,77 @@ import { ChatProvider } from "./context/ChatContext";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "../components/error/ErrorBoundary";
 import { PageLoader } from "../components/ui/skeletons/PageLoader";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 
-// Layouts
-import { Layout } from "./components/Layout";
-import { StudentLayout } from "./components/layouts/StudentLayout";
-import { ParentLayout } from "./components/layouts/ParentLayout";
-import { AdminLayout } from "./components/layouts/AdminLayout";
-import { TeacherLayout } from "./components/layouts/TeacherLayout";
+// Layouts - imported statically as they are lightweight and wrap the pages
+import { Layout } from "../components/layouts/Layout";
+import { StudentLayout } from "../components/layouts/StudentLayout";
+import { ParentLayout } from "../components/layouts/ParentLayout";
+import { AdminLayout } from "../components/layouts/AdminLayout";
+import { TeacherLayout } from "../components/layouts/TeacherLayout";
 
-// Tip: For future optimization, use React.lazy for route components:
-// const EnhancedLogin = lazy(() => import('./pages/auth/EnhancedLogin'));
-import { EnhancedLogin } from "./pages/auth/EnhancedLogin";
-import { ForgotPassword } from "./pages/auth/ForgotPassword";
-import { ParentDashboard } from "./pages/ParentDashboard";
-import { ChatInterface } from "./pages/ChatInterface";
-import { SupportTickets } from "./pages/support/SupportTickets";
+// Route Page components (Lazy loaded to reduce initial bundle size)
+const EnhancedLogin = lazy(() => import("./pages/auth/EnhancedLogin").then(m => ({ default: m.EnhancedLogin })));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword").then(m => ({ default: m.ForgotPassword })));
+const ChatInterface = lazy(() => import("./pages/ChatInterface").then(m => ({ default: m.ChatInterface })));
+const SupportTickets = lazy(() => import("./pages/support/SupportTickets").then(m => ({ default: m.SupportTickets })));
 
 // Student Features
-import { StudentDashboardHome } from "../features/student-dashboard/StudentDashboardHome";
-import { StudentGrades } from "../features/student-dashboard/StudentGrades";
-import { StudentAssignments } from "../features/student-dashboard/StudentAssignments";
-import { StudentAttendance } from "../features/student-dashboard/StudentAttendance";
-import { Timetable } from "./pages/student/Timetable";
-import { CareerOptions } from "./pages/student/CareerOptions";
-import { SubjectCompletions } from "./pages/student/SubjectCompletions";
-import { Doubts } from "./pages/student/Doubts";
+const StudentDashboardHome = lazy(() => import("../features/student-dashboard/StudentDashboardHome").then(m => ({ default: m.StudentDashboardHome })));
+const StudentGrades = lazy(() => import("../features/student-dashboard/StudentGrades").then(m => ({ default: m.StudentGrades })));
+const StudentAssignments = lazy(() => import("../features/student-dashboard/StudentAssignments").then(m => ({ default: m.StudentAssignments })));
+const StudentAttendance = lazy(() => import("../features/student-dashboard/StudentAttendance").then(m => ({ default: m.StudentAttendance })));
+const Timetable = lazy(() => import("../features/student-dashboard/Timetable").then(m => ({ default: m.Timetable })));
+const CareerOptions = lazy(() => import("../features/student-dashboard/CareerOptions").then(m => ({ default: m.CareerOptions })));
+const SubjectCompletions = lazy(() => import("../features/student-dashboard/SubjectCompletions").then(m => ({ default: m.SubjectCompletions })));
+const Doubts = lazy(() => import("../features/student-dashboard/Doubts").then(m => ({ default: m.Doubts })));
+const StudentQuizRunner = lazy(() => import("../features/student-dashboard/StudentQuizRunner").then(m => ({ default: m.StudentQuizRunner })));
 
 // Parent Features
-import { ParentHome } from "../features/parent-dashboard/ParentHome";
-import { ParentProgress } from "../features/parent-dashboard/ParentProgress";
-import { ParentAttendance } from "../features/parent-dashboard/ParentAttendance";
-import { ParentFees } from "../features/parent-dashboard/ParentFees";
+const ParentHome = lazy(() => import("../features/parent-dashboard/ParentHome").then(m => ({ default: m.ParentHome })));
+const ParentProgress = lazy(() => import("../features/parent-dashboard/ParentProgress").then(m => ({ default: m.ParentProgress })));
+const ParentAttendance = lazy(() => import("../features/parent-dashboard/ParentAttendance").then(m => ({ default: m.ParentAttendance })));
+const ParentFees = lazy(() => import("../features/parent-dashboard/ParentFees").then(m => ({ default: m.ParentFees })));
 
 // Admin Features
-import { AdminHome } from "../features/admin-dashboard/AdminHome";
-import { AdminClassManagement } from "./pages/admin/AdminClassManagement";
-import { AdminFeesManagement } from "./pages/admin/AdminFeesManagement";
-import { AdminReports } from "./pages/admin/AdminReports";
-import { AdminSettings } from "./pages/admin/AdminSettings";
-import { AdminStudentManagement } from "./pages/admin/AdminStudentManagement";
-import { AdminTeacherManagement } from "./pages/admin/AdminTeacherManagement";
-import { AdminSubjectManagement } from "./pages/admin/AdminSubjectManagement";
-import { AdminTimetableApprovals } from "./pages/admin/AdminTimetableApprovals";
-import { AdminTicketManagement } from "./pages/support/AdminTicketManagement";
-import { UserManagement } from "./pages/admin/UserManagement";
-import { AdminGradebook } from "../features/gradebook/pages/AdminGradebook";
+const AdminHome = lazy(() => import("../features/admin-dashboard/AdminHome").then(m => ({ default: m.AdminHome })));
+const AdminClassManagement = lazy(() => import("./pages/admin/AdminClassManagement").then(m => ({ default: m.AdminClassManagement })));
+const AdminFeesManagement = lazy(() => import("./pages/admin/AdminFeesManagement").then(m => ({ default: m.AdminFeesManagement })));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports").then(m => ({ default: m.AdminReports })));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings").then(m => ({ default: m.AdminSettings })));
+const AdminStudentManagement = lazy(() => import("./pages/admin/AdminStudentManagement").then(m => ({ default: m.AdminStudentManagement })));
+const AdminTeacherManagement = lazy(() => import("./pages/admin/AdminTeacherManagement").then(m => ({ default: m.AdminTeacherManagement })));
+const AdminSubjectManagement = lazy(() => import("./pages/admin/AdminSubjectManagement").then(m => ({ default: m.AdminSubjectManagement })));
+const AdminTimetableApprovals = lazy(() => import("./pages/admin/AdminTimetableApprovals").then(m => ({ default: m.AdminTimetableApprovals })));
+const AdminTicketManagement = lazy(() => import("./pages/support/AdminTicketManagement").then(m => ({ default: m.AdminTicketManagement })));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement").then(m => ({ default: m.UserManagement })));
+const AdminGradebook = lazy(() => import("../features/gradebook/pages/AdminGradebook").then(m => ({ default: m.AdminGradebook })));
 
 // Teacher Features
-import { TeacherHome } from "../features/teacher-dashboard/TeacherHome";
-import { TeacherClasses } from "../features/teacher-dashboard/TeacherClasses";
-import { TeacherAttendance } from "../features/teacher-dashboard/TeacherAttendance";
-import { TeacherAssignments } from "../features/teacher-dashboard/TeacherAssignments";
-import { TeacherGrades } from "../features/teacher-dashboard/TeacherGrades";
+const TeacherHome = lazy(() => import("../features/teacher-dashboard/TeacherHome").then(m => ({ default: m.TeacherHome })));
+const TeacherClasses = lazy(() => import("../features/teacher-dashboard/TeacherClasses").then(m => ({ default: m.TeacherClasses })));
+const TeacherAttendance = lazy(() => import("../features/teacher-dashboard/TeacherAttendance").then(m => ({ default: m.TeacherAttendance })));
+const TeacherAssignments = lazy(() => import("../features/teacher-dashboard/TeacherAssignments").then(m => ({ default: m.TeacherAssignments })));
+const TeacherGrades = lazy(() => import("../features/teacher-dashboard/TeacherGrades").then(m => ({ default: m.TeacherGrades })));
 
 // Management Features
-import { StudentManagement } from "./pages/management/StudentManagement";
-import { AdmissionsCRM } from "./pages/management/AdmissionsCRM";
-import { AcademicsManagement } from "./pages/management/AcademicsManagement";
-import { AttendanceManagement } from "./pages/management/AttendanceManagement";
-import { FeesManagement } from "./pages/management/FeesManagement";
-import { ReportsAnalytics } from "./pages/management/ReportsAnalytics";
-import { Settings } from "./pages/management/Settings";
-import { NotificationCenter } from "../features/notifications/components/NotificationCenter";
-import LeaveRequestForm from "./pages/teacher/LeaveRequestForm";
-import AdminLeaveApprovals from "./pages/admin/AdminLeaveApprovals";
-import LMSDashboard from "./pages/management/LMSDashboard";
+const StudentManagement = lazy(() => import("./pages/management/StudentManagement").then(m => ({ default: m.StudentManagement })));
+const AdmissionsCRM = lazy(() => import("./pages/management/AdmissionsCRM").then(m => ({ default: m.AdmissionsCRM })));
+const AcademicsManagement = lazy(() => import("./pages/management/AcademicsManagement").then(m => ({ default: m.AcademicsManagement })));
+const AttendanceManagement = lazy(() => import("./pages/management/AttendanceManagement").then(m => ({ default: m.AttendanceManagement })));
+const FeesManagement = lazy(() => import("./pages/management/FeesManagement").then(m => ({ default: m.FeesManagement })));
+const ReportsAnalytics = lazy(() => import("./pages/management/ReportsAnalytics").then(m => ({ default: m.ReportsAnalytics })));
+const Settings = lazy(() => import("./pages/management/Settings").then(m => ({ default: m.Settings })));
+const NotificationCenter = lazy(() => import("../features/notifications/components/NotificationCenter").then(m => ({ default: m.NotificationCenter })));
+const LeaveRequestForm = lazy(() => import("./pages/teacher/LeaveRequestForm"));
+const AdminLeaveApprovals = lazy(() => import("./pages/admin/AdminLeaveApprovals"));
+const LMSDashboard = lazy(() => import("./pages/management/LMSDashboard"));
+
+// Transport Features
+const AdminTransport = lazy(() => import("./pages/admin/AdminTransport").then(m => ({ default: m.AdminTransport })));
+const DriverDashboard = lazy(() => import("../features/driver/pages/DriverDashboard").then(m => ({ default: m.DriverDashboard })));
+const StudentTransport = lazy(() => import("../features/student-dashboard/StudentTransport").then(m => ({ default: m.StudentTransport })));
+
 
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -90,6 +95,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     // If user doesn't have permission, redirect to their home dashboard
     const homePath = user?.role === "Parent" ? "/parent/dashboard" : 
                     user?.role === "Student" ? "/student/dashboard" :
+                    (user?.role === "Driver" || user?.role === "Helper" || user?.role === "Assistant") ? "/driver/dashboard" :
                     (user?.role === "Teacher" || user?.role === "Staff") ? "/teacher/dashboard" : 
                     (user?.role === "Admin" || user?.role === "SuperAdmin") ? "/admin/dashboard" : "/login";
     return <Navigate to={homePath} replace />;
@@ -102,6 +108,7 @@ const RedirectBasedOnRole = () => {
   if (user?.role === "Parent") return <Navigate to="/parent/dashboard" replace />;
   if (user?.role === "Student") return <Navigate to="/student/dashboard" replace />;
   if (user?.role === "Admin" || user?.role === "SuperAdmin") return <Navigate to="/admin/dashboard" replace />;
+  if (user?.role === "Driver" || user?.role === "Helper" || user?.role === "Assistant") return <Navigate to="/driver/dashboard" replace />;
   if (user?.role === "Teacher" || user?.role === "Staff") return <Navigate to="/teacher/dashboard" replace />;
   return <Navigate to="/dashboard" replace />;
 };
@@ -136,6 +143,8 @@ const AppContent = () => {
         <Route path="doubts" element={<Doubts />} />
         <Route path="career" element={<CareerOptions />} />
         <Route path="completions" element={<SubjectCompletions />} />
+        <Route path="quizzes" element={<StudentQuizRunner />} />
+        <Route path="transport" element={<StudentTransport />} />
         <Route path="chat" element={<ChatInterface />} />
         <Route path="support" element={<SupportTickets />} />
       </Route>
@@ -151,6 +160,7 @@ const AppContent = () => {
         <Route path="attendance" element={<ParentAttendance />} />
         <Route path="schedule" element={<ParentHome />} />
         <Route path="fees" element={<ParentFees />} />
+        <Route path="transport" element={<StudentTransport />} />
         <Route path="chat" element={<ChatInterface />} />
         <Route path="support" element={<SupportTickets />} />
       </Route>
@@ -168,6 +178,7 @@ const AppContent = () => {
         <Route path="tickets" element={<AdminTicketManagement />} />
         <Route path="timetable-approvals" element={<AdminTimetableApprovals />} />
         <Route path="gradebook" element={<AdminGradebook />} />
+        <Route path="transport" element={<AdminTransport />} />
         <Route path="leaves" element={<AdminLeaveApprovals />} />
         <Route path="chat" element={<ChatInterface />} />
         <Route path="settings" element={<AdminSettings />} />
@@ -186,6 +197,17 @@ const AppContent = () => {
         <Route path="grades" element={<TeacherGrades />} />
         <Route path="chat" element={<ChatInterface />} />
         <Route path="leaves" element={<LeaveRequestForm />} />
+        <Route path="support" element={<SupportTickets />} />
+      </Route>
+      
+      {
+    /* Driver Routes */
+  }
+      <Route path="/driver/dashboard" element={<ProtectedRoute allowedRoles={["Driver", "Helper", "Assistant"]}>
+          <TeacherLayout />
+        </ProtectedRoute>}>
+        <Route index element={<DriverDashboard />} />
+        <Route path="chat" element={<ChatInterface />} />
         <Route path="support" element={<SupportTickets />} />
       </Route>
       

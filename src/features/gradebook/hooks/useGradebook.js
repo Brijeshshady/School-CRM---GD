@@ -142,3 +142,39 @@ export const usePublishReportCard = () => {
     }
   });
 };
+
+export const useExamSchedules = (filters = {}) => {
+  return useQuery({
+    queryKey: ['examSchedules', filters],
+    queryFn: () => gradebookService.getExamSchedules(filters)
+  });
+};
+
+export const useUpsertExamSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: gradebookService.upsertExamSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['examSchedules'] });
+      toast.success('Exam schedule saved successfully');
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to save exam schedule');
+    }
+  });
+};
+
+export const useDeleteExamSchedule = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: gradebookService.deleteExamSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['examSchedules'] });
+      toast.success('Exam schedule deleted successfully');
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Failed to delete exam schedule');
+    }
+  });
+};
+

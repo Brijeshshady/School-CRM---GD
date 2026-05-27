@@ -4,8 +4,15 @@ import axios from 'axios';
  * Centralized API Client
  * Configured with baseURL and JWT interceptors for automatic auth handling.
  */
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return 'http://localhost:5000/api';
+  }
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: getApiUrl(),
   timeout: 20000, // 20 second timeout to prevent hanging requests
   headers: {
     'Content-Type': 'application/json',

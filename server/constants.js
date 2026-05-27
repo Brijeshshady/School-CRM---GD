@@ -4,7 +4,9 @@ const ROLES = {
   TEACHER: 'Teacher',
   STAFF: 'Staff',
   STUDENT: 'Student',
-  PARENT: 'Parent'
+  PARENT: 'Parent',
+  DRIVER: 'Driver',
+  HELPER: 'Helper'
 };
 
 const ATTENDANCE_STATUS = {

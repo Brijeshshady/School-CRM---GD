@@ -18,17 +18,20 @@ export const EnhancedLogin = ({ defaultTab }) => {
 
   const handleFillSampleData = () => {
     if (activeTab === "parent") {
-      setEmail("parent1@school.com");
-      setPassword("password123");
+      setEmail("ravi.kumar@example.com");
+      setPassword("parent123");
     } else if (activeTab === "student") {
-      setEmail("student1@school.com");
-      setPassword("password123");
+      setEmail("STU-2026-0142");
+      setPassword("student123");
     } else if (activeTab === "staff") {
-      setEmail("teacher1@school.com");
-      setPassword("password123");
+      setEmail("priya.sharma@school.edu.in");
+      setPassword("staff123");
     } else if (activeTab === "admin") {
       setEmail("admin@school.com");
       setPassword("password123");
+    } else if (activeTab === "driver") {
+      setEmail("driver@school.com");
+      setPassword("driver123");
     }
   };
 
@@ -52,6 +55,7 @@ export const EnhancedLogin = ({ defaultTab }) => {
       else if (userRole === "Student") navigate("/student/dashboard");
       else if (userRole === "Admin" || userRole === "SuperAdmin") navigate("/admin/dashboard");
       else if (userRole === "Teacher" || userRole === "Staff") navigate("/teacher/dashboard");
+      else if (userRole === "Driver" || userRole === "Helper" || userRole === "Assistant") navigate("/driver/dashboard");
       else navigate("/dashboard");
 
     } catch (err) {
@@ -86,13 +90,12 @@ export const EnhancedLogin = ({ defaultTab }) => {
 
           {/* Tab Selector */}
           <div className="flex p-1 bg-slate-100 rounded-xl mb-6 relative">
-            {["parent", "student", "staff", "admin"].map((tab) => (
+            {["parent", "student", "staff", "admin", "driver"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
                   setError("");
-                  // Clear fields on tab change to avoid confusion in demo
                   setEmail("");
                   setPassword("");
                 }}
@@ -137,7 +140,17 @@ export const EnhancedLogin = ({ defaultTab }) => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  placeholder={activeTab === "student" ? "student1@school.com" : `${activeTab}@school.com`}
+                  placeholder={
+                    activeTab === "student"
+                      ? "STU-2026-0142"
+                      : activeTab === "parent"
+                      ? "ravi.kumar@example.com"
+                      : activeTab === "staff"
+                      ? "priya.sharma@school.edu.in"
+                      : activeTab === "driver"
+                      ? "driver@school.com"
+                      : "admin@school.com"
+                  }
                 />
               </div>
             </div>

@@ -4,13 +4,12 @@ const User = require("../models/User");
 
 let io = null;
 const userSockets = new Map(); // userId -> Set of socketIds
+const routeLocations = new Map(); // routeId -> { latitude, longitude, timestamp }
 
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: [
-        "http://localhost:5173"
-      ],
+      origin: "*",
       credentials: true
     }
   });
@@ -65,6 +64,40 @@ const { registerChatHandlers } = require("./chatSocket");
 
     // Join room dedicated to this user's role (for broadcasting role-targeted notifications)
     socket.join(`role:${userRole}`);
+
+    // Join room for real-time bus tracking
+    socket.on("join-route", (routeId) => {
+      socket.join(`route:${routeId}`);
+      console.log(`Client ${socket.user.name} joined tracking room: route:${routeId}`);
+      
+      // If there is a last known location for this route, emit it immediately to the joining client
+      if (routeLocations.has(routeId)) {
+        const lastLoc = routeLocations.get(routeId);
+        socket.emit("route-location-changed", {
+          routeId,
+          latitude: lastLoc.latitude,
+          longitude: lastLoc.longitude,
+          speed: lastLoc.speed,
+          timestamp: lastLoc.timestamp
+        });
+      }
+    });
+
+    // Listen for driver location stream
+    socket.on("driver-location-update", ({ routeId, latitude, longitude, speed }) => {
+      const timestamp = new Date();
+      
+      // Update in-memory cache
+      routeLocations.set(routeId, { latitude, longitude, speed, timestamp });
+      
+      io.to(`route:${routeId}`).emit("route-location-changed", {
+        routeId,
+        latitude,
+        longitude,
+        speed,
+        timestamp
+      });
+    });
 
     // Handle disconnect
     socket.on("disconnect", () => {

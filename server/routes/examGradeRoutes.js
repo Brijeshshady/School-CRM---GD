@@ -12,7 +12,10 @@ const {
   getStudentAnalytics,
   generateReportCard,
   publishReportCard,
-  getReportCards
+  getReportCards,
+  getExamSchedules,
+  upsertExamSchedule,
+  deleteExamSchedule
 } = require('../controllers/examGradeController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -39,4 +42,10 @@ router.get('/report-cards', getReportCards);
 router.post('/report-cards/generate', authorize('Teacher', 'Admin'), generateReportCard);
 router.put('/report-cards/:id/publish', authorize('Teacher', 'Admin'), publishReportCard);
 
+// 5. Exam Timetable / Schedule Routes
+router.get('/schedules', getExamSchedules);
+router.post('/schedules', authorize('Admin'), upsertExamSchedule);
+router.delete('/schedules/:id', authorize('Admin'), deleteExamSchedule);
+
 module.exports = router;
+

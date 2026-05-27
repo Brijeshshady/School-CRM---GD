@@ -7,10 +7,20 @@ const vehicleRouteSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    routeNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
     vehicleNumber: {
       type: String,
       required: true,
       trim: true,
+    },
+    vehicle: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Vehicle',
     },
     driverName: {
       type: String,
@@ -20,16 +30,42 @@ const vehicleRouteSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    driver: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    assistant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
     stops: [
       {
-        type: String,
-        trim: true,
+        stopName: {
+          type: String,
+          required: true,
+          trim: true,
+        },
+        latitude: {
+          type: Number,
+          required: true,
+        },
+        longitude: {
+          type: Number,
+          required: true,
+        },
+        scheduledTime: String,
       },
     ],
     studentsAllocated: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Student',
+        student: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Student',
+        },
+        stopName: {
+          type: String,
+          required: true,
+        }
       },
     ],
   },

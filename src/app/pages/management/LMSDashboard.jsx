@@ -25,12 +25,15 @@ export default function LMSDashboard() {
 
   // New Question Form State
   const [newQText, setNewQText] = useState("");
+  const [newQType, setNewQType] = useState("MCQ"); // "MCQ" or "Descriptive"
   const [newQOptions, setNewQOptions] = useState(["", "", "", ""]);
   const [newQCorrect, setNewQCorrect] = useState(0);
   const [newQPoints, setNewQPoints] = useState(5);
 
   // Selected Quiz attempts tracker
   const [trackedQuiz, setTrackedQuiz] = useState(null);
+  const [gradingAttempt, setGradingAttempt] = useState(null); // attempt being graded
+  const [manualScores, setManualScores] = useState({}); // { questionId: score }
 
   // Fetch subjects
   const { data: subjectsResponse, isLoading: subjectsLoading } = useQuery({
@@ -131,6 +134,7 @@ export default function LMSDashboard() {
         const qRes = await api.post("/quizzes/questions", {
           subject: selectedSubjectId,
           questionText: q.questionText,
+          type: q.type || 'MCQ',
           options: q.options,
           correctOption: q.correctOption,
           points: q.points
@@ -173,23 +177,39 @@ export default function LMSDashboard() {
       toast.error("Question text cannot be empty");
       return;
     }
-    if (newQOptions.some(opt => !opt.trim())) {
-      toast.error("Please supply all 4 options");
-      return;
-    }
 
-    setQuizQuestions(prev => [
-      ...prev,
-      {
-        questionText: newQText,
-        options: [...newQOptions],
-        correctOption: Number(newQCorrect),
-        points: Number(newQPoints)
+    if (newQType === 'MCQ') {
+      if (newQOptions.some(opt => !opt.trim())) {
+        toast.error("Please supply all 4 options");
+        return;
       }
-    ]);
+      setQuizQuestions(prev => [
+        ...prev,
+        {
+          questionText: newQText,
+          type: 'MCQ',
+          options: [...newQOptions],
+          correctOption: Number(newQCorrect),
+          points: Number(newQPoints)
+        }
+      ]);
+    } else {
+      // Descriptive
+      setQuizQuestions(prev => [
+        ...prev,
+        {
+          questionText: newQText,
+          type: 'Descriptive',
+          options: [],
+          correctOption: null,
+          points: Number(newQPoints)
+        }
+      ]);
+    }
 
     // Clear question form
     setNewQText("");
+    setNewQType("MCQ");
     setNewQOptions(["", "", "", ""]);
     setNewQCorrect(0);
     setNewQPoints(5);
@@ -564,53 +584,20 @@ export default function LMSDashboard() {
 
                 {/* Question Form */}
                 <div className="p-5 border border-indigo-100 bg-indigo-50/20 rounded-2xl space-y-4">
-                  <h4 className="font-black text-xs text-indigo-700 uppercase tracking-widest">Append New MCQ Question</h4>
+                  <h4 className="font-black text-xs text-indigo-700 uppercase tracking-widest">Append New Question</h4>
                   
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question Text</label>
-                    <input
-                      type="text"
-                      placeholder="Enter question questionText..."
-                      value={newQText}
-                      onChange={(e) => setNewQText(e.target.value)}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {newQOptions.map((opt, i) => (
-                      <div key={i} className="space-y-1">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Option {i + 1}</label>
-                        <input
-                          type="text"
-                          placeholder={`Option ${i + 1}...`}
-                          value={opt}
-                          onChange={(e) => {
-                            const copy = [...newQOptions];
-                            copy[i] = e.target.value;
-                            setNewQOptions(copy);
-                          }}
-                          className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
-                        />
-                      </div>
-                    ))}
-                  </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Correct Option</label>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question Type</label>
                       <select
-                        value={newQCorrect}
-                        onChange={(e) => setNewQCorrect(Number(e.target.value))}
-                        className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+                        value={newQType}
+                        onChange={(e) => setNewQType(e.target.value)}
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white font-semibold"
                       >
-                        <option value={0}>Option 1</option>
-                        <option value={1}>Option 2</option>
-                        <option value={2}>Option 3</option>
-                        <option value={3}>Option 4</option>
+                        <option value="MCQ">MCQ (Multiple Choice)</option>
+                        <option value="Descriptive">Descriptive (Essay)</option>
                       </select>
                     </div>
-
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question Points</label>
                       <input
@@ -621,6 +608,54 @@ export default function LMSDashboard() {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question Text</label>
+                    <input
+                      type="text"
+                      placeholder="Enter question text..."
+                      value={newQText}
+                      onChange={(e) => setNewQText(e.target.value)}
+                      className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+                    />
+                  </div>
+                  
+                  {newQType === 'MCQ' && (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {newQOptions.map((opt, i) => (
+                          <div key={i} className="space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Option {i + 1}</label>
+                            <input
+                              type="text"
+                              placeholder={`Option ${i + 1}...`}
+                              value={opt}
+                              onChange={(e) => {
+                                const copy = [...newQOptions];
+                                copy[i] = e.target.value;
+                                setNewQOptions(copy);
+                              }}
+                              className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+                            />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Correct Option</label>
+                        <select
+                          value={newQCorrect}
+                          onChange={(e) => setNewQCorrect(Number(e.target.value))}
+                          className="w-full px-4 py-2 border border-slate-200 rounded-xl text-xs bg-white"
+                        >
+                          <option value={0}>Option 1</option>
+                          <option value={1}>Option 2</option>
+                          <option value={2}>Option 3</option>
+                          <option value={3}>Option 4</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
 
                   <button
                     type="button"
@@ -668,30 +703,112 @@ export default function LMSDashboard() {
                 <div className="flex justify-center py-6"><Loader2 className="w-6 h-6 animate-spin text-indigo-600" /></div>
               ) : trackedAttempts && trackedAttempts.length > 0 ? (
                 <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-                  {trackedAttempts.map((att) => (
-                    <div key={att._id} className="p-4 border border-slate-100 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center font-bold text-indigo-700">
-                          <User className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-slate-800 leading-tight">{att.student?.user?.name || "Student"}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                            {new Date(att.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
+                  {trackedAttempts.map((att) => {
+                    const isGrading = gradingAttempt === att._id;
+                    const hasDescriptive = att.answers?.some(a => a.question?.type === 'Descriptive');
+                    return (
+                      <div key={att._id} className="border border-slate-100 rounded-2xl bg-slate-50/50 overflow-hidden">
+                        <div className="p-4 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center font-bold text-indigo-700">
+                              <User className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-slate-800 leading-tight">{att.student?.user?.name || "Student"}</p>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                                {new Date(att.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
 
-                      <div className="text-right">
-                        <p className="text-sm font-black text-indigo-600 leading-tight">
-                          {att.score}/{att.totalPoints} Pts
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-black tracking-widest mt-0.5">
-                          {Math.round((att.score / att.totalPoints) * 100)}%
-                        </p>
+                          <div className="text-right flex items-center gap-2">
+                            <div>
+                              <p className="text-sm font-black text-indigo-600 leading-tight">
+                                {att.score}/{att.totalPoints} Pts
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-black tracking-widest mt-0.5">
+                                {att.totalPoints > 0 ? Math.round((att.score / att.totalPoints) * 100) : 0}%
+                              </p>
+                            </div>
+                            {hasDescriptive && (
+                              <button
+                                onClick={() => {
+                                  if (isGrading) {
+                                    setGradingAttempt(null);
+                                    setManualScores({});
+                                  } else {
+                                    setGradingAttempt(att._id);
+                                    // Pre-fill existing scores
+                                    const scores = {};
+                                    att.answers?.forEach(a => {
+                                      if (a.question?.type === 'Descriptive') {
+                                        scores[a.question._id] = a.score || 0;
+                                      }
+                                    });
+                                    setManualScores(scores);
+                                  }
+                                }}
+                                className="p-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg border border-amber-200 transition-colors"
+                                title="Grade descriptive answers"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Manual Grading Panel */}
+                        {isGrading && (
+                          <div className="p-4 border-t border-slate-100 bg-amber-50/30 space-y-3">
+                            <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest">Grade Descriptive Answers</p>
+                            {att.answers?.filter(a => a.question?.type === 'Descriptive').map(a => (
+                              <div key={a.question._id} className="p-3 bg-white rounded-xl border border-slate-100 space-y-2">
+                                <p className="text-xs font-bold text-slate-700">{a.question.questionText}</p>
+                                <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded-lg italic">
+                                  {a.descriptiveAnswer || 'No answer provided'}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Score:</label>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max={a.question.points}
+                                    value={manualScores[a.question._id] ?? 0}
+                                    onChange={(e) => setManualScores(prev => ({
+                                      ...prev,
+                                      [a.question._id]: Number(e.target.value)
+                                    }))}
+                                    className="w-16 px-2 py-1 border border-slate-200 rounded text-xs font-bold text-center"
+                                  />
+                                  <span className="text-[10px] text-slate-400 font-bold">/ {a.question.points}</span>
+                                </div>
+                              </div>
+                            ))}
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const grades = Object.entries(manualScores).map(([qId, score]) => ({
+                                    questionId: qId,
+                                    score,
+                                  }));
+                                  await api.patch(`/quizzes/attempts/${att._id}/grade`, { grades });
+                                  toast.success("Grades saved!");
+                                  queryClient.invalidateQueries(["quiz-attempts", trackedQuiz?._id]);
+                                  setGradingAttempt(null);
+                                  setManualScores({});
+                                } catch (err) {
+                                  toast.error(err.response?.data?.message || "Failed to save grades");
+                                }
+                              }}
+                              className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-colors"
+                            >
+                              Save Grades
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 border border-dashed border-slate-200 rounded-2xl">

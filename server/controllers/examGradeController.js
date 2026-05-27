@@ -7,6 +7,7 @@ const Subject = require('../models/Subject');
 const Attendance = require('../models/Attendance');
 const Parent = require('../models/Parent');
 const User = require('../models/User');
+const ExamSchedule = require('../models/ExamSchedule');
 const { createAndSendNotification } = require('../sockets/notificationSocket');
 const asyncHandler = require('../middleware/asyncHandler');
 const sendResponse = require('../utils/apiResponse');
@@ -852,3 +853,97 @@ exports.getReportCards = asyncHandler(async (req, res) => {
 
   sendResponse(res, HTTP_STATUS.OK, reportCards, 'Report cards fetched successfully');
 });
+
+// @desc    Get exam schedules
+// @route   GET /api/exam-grades/schedules
+// @access  Private
+exports.getExamSchedules = asyncHandler(async (req, res) => {
+  const { classId, examTypeId } = req.query;
+  const query = {};
+  if (classId) query.class = classId;
+  if (examTypeId) query.examType = examTypeId;
+
+  const schedules = await ExamSchedule.find(query)
+    .populate('examType', 'name code')
+    .populate('class', 'name section')
+    .populate('timetable.subject', 'name code');
+
+  sendResponse(res, HTTP_STATUS.OK, schedules, 'Exam schedules fetched successfully');
+});
+
+// @desc    Upsert/Create/Update Exam Schedule
+// @route   POST /api/exam-grades/schedules
+// @access  Private/Admin
+exports.upsertExamSchedule = asyncHandler(async (req, res) => {
+  const { classId, examTypeId, timetable, academicYear } = req.body;
+
+  if (!classId || !examTypeId || !Array.isArray(timetable)) {
+    res.status(HTTP_STATUS.BAD_REQUEST);
+    throw new Error('Class ID, Exam Type ID, and timetable array are required');
+  }
+
+  let schedule = await ExamSchedule.findOne({ class: classId, examType: examTypeId });
+
+  if (schedule) {
+    schedule.timetable = timetable;
+    if (academicYear) schedule.academicYear = academicYear;
+  } else {
+    schedule = new ExamSchedule({
+      class: classId,
+      examType: examTypeId,
+      timetable,
+      academicYear: academicYear || '2025-2026'
+    });
+  }
+
+  await schedule.save();
+
+  const populated = await ExamSchedule.findById(schedule._id)
+    .populate('examType', 'name code')
+    .populate('class', 'name section')
+    .populate('timetable.subject', 'name code');
+
+  // Notify class students and parents about the new schedule
+  const students = await Student.find({ class: classId }).populate('user');
+  const examTypeObj = await ExamType.findById(examTypeId);
+
+  for (const s of students) {
+    if (s.user) {
+      await createAndSendNotification({
+        userId: s.user._id,
+        type: 'info',
+        title: 'Exam Timetable Updated',
+        message: `The timetable for ${examTypeObj?.name || 'upcoming'} exams has been updated. Please check the dashboard.`,
+        actionUrl: `/student/grades`
+      });
+
+      const parents = await Parent.find({ studentIds: s._id }).populate('user');
+      for (const p of parents) {
+        if (p.user) {
+          await createAndSendNotification({
+            userId: p.user._id,
+            type: 'info',
+            title: 'Child Exam Timetable Updated',
+            message: `The exam timetable for ${s.user.name} has been configured.`,
+            actionUrl: `/parent/grades`
+          });
+        }
+      }
+    }
+  }
+
+  sendResponse(res, HTTP_STATUS.OK, populated, 'Exam schedule saved successfully');
+});
+
+// @desc    Delete Exam Schedule
+// @route   DELETE /api/exam-grades/schedules/:id
+// @access  Private/Admin
+exports.deleteExamSchedule = asyncHandler(async (req, res) => {
+  const schedule = await ExamSchedule.findByIdAndDelete(req.params.id);
+  if (!schedule) {
+    res.status(HTTP_STATUS.NOT_FOUND);
+    throw new Error('Exam schedule not found');
+  }
+  sendResponse(res, HTTP_STATUS.OK, null, 'Exam schedule deleted successfully');
+});
+

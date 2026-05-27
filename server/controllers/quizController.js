@@ -169,7 +169,7 @@ exports.getQuizDetails = asyncHandler(async (req, res) => {
 // @route   POST /api/quizzes/:id/submit
 // @access  Private (Student)
 exports.submitQuizAttempt = asyncHandler(async (req, res) => {
-  const { answers } = req.body; // array of { question: id, selectedOption: index }
+  const { answers } = req.body; // array of { question: id, selectedOption: index, descriptiveAnswer: string }
 
   if (!answers || !Array.isArray(answers)) {
     return res.status(HTTP_STATUS.BAD_REQUEST).json({
@@ -205,7 +205,7 @@ exports.submitQuizAttempt = asyncHandler(async (req, res) => {
     }
   }
 
-  // Auto-grading logic
+  // Auto-grading logic (MCQ only; Descriptive requires manual grading)
   let score = 0;
   let totalPoints = 0;
   const gradedAnswers = [];
@@ -213,17 +213,29 @@ exports.submitQuizAttempt = asyncHandler(async (req, res) => {
   for (const ans of answers) {
     const questionObj = quiz.questions.find((q) => q._id.toString() === ans.question.toString());
     if (questionObj) {
-      const isCorrect = questionObj.correctOption === ans.selectedOption;
-      const pts = isCorrect ? questionObj.points : 0;
-      if (isCorrect) score += questionObj.points;
       totalPoints += questionObj.points;
 
-      gradedAnswers.push({
-        question: ans.question,
-        selectedOption: ans.selectedOption,
-        isCorrect,
-        score: pts,
-      });
+      if (questionObj.type === 'Descriptive') {
+        // Descriptive questions require manual grading — save answer, score = 0
+        gradedAnswers.push({
+          question: ans.question,
+          descriptiveAnswer: ans.descriptiveAnswer || '',
+          isCorrect: null, // Pending manual review
+          score: 0,
+        });
+      } else {
+        // MCQ auto-grading
+        const isCorrect = questionObj.correctOption === ans.selectedOption;
+        const pts = isCorrect ? questionObj.points : 0;
+        if (isCorrect) score += questionObj.points;
+
+        gradedAnswers.push({
+          question: ans.question,
+          selectedOption: ans.selectedOption,
+          isCorrect,
+          score: pts,
+        });
+      }
     }
   }
 
@@ -250,6 +262,7 @@ exports.getQuizAttempts = asyncHandler(async (req, res) => {
       path: 'student',
       populate: { path: 'user', select: 'name email' },
     })
+    .populate('answers.question')
     .sort('-createdAt');
 
   res.status(HTTP_STATUS.OK).json({
@@ -257,3 +270,46 @@ exports.getQuizAttempts = asyncHandler(async (req, res) => {
     data: attempts,
   });
 });
+
+// @desc    Manually grade descriptive answers in a quiz attempt
+// @route   PATCH /api/quizzes/attempts/:attemptId/grade
+// @access  Private (Teacher or Admin)
+exports.gradeQuizAttempt = asyncHandler(async (req, res) => {
+  const { grades } = req.body; // array of { questionId, score }
+
+  if (!grades || !Array.isArray(grades)) {
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({
+      success: false,
+      message: 'Please provide grades array',
+    });
+  }
+
+  const attempt = await QuizAttempt.findById(req.params.attemptId);
+  if (!attempt) {
+    return res.status(HTTP_STATUS.NOT_FOUND).json({
+      success: false,
+      message: 'Attempt not found',
+    });
+  }
+
+  // Update individual answer scores
+  let newTotal = 0;
+  for (const ans of attempt.answers) {
+    const gradeEntry = grades.find(g => g.questionId === ans.question.toString());
+    if (gradeEntry !== undefined && gradeEntry.score !== undefined) {
+      ans.score = gradeEntry.score;
+      ans.isCorrect = gradeEntry.score > 0;
+    }
+    newTotal += ans.score || 0;
+  }
+
+  attempt.score = newTotal;
+  await attempt.save();
+
+  res.status(HTTP_STATUS.OK).json({
+    success: true,
+    data: attempt,
+    message: 'Attempt graded successfully',
+  });
+});
+

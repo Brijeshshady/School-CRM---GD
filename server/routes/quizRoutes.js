@@ -7,7 +7,8 @@ const {
   getQuizzes, 
   getQuizDetails, 
   submitQuizAttempt,
-  getQuizAttempts
+  getQuizAttempts,
+  gradeQuizAttempt
 } = require('../controllers/quizController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { ROLES } = require('../constants');
@@ -30,5 +31,9 @@ router.route('/:id/submit')
 
 router.route('/:id/attempts')
   .get(authorize(ROLES.TEACHER, ROLES.ADMIN), getQuizAttempts);
+
+// Teacher manually grades descriptive answers in a specific attempt
+router.route('/attempts/:attemptId/grade')
+  .patch(authorize(ROLES.TEACHER, ROLES.ADMIN), gradeQuizAttempt);
 
 module.exports = router;

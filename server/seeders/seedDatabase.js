@@ -142,7 +142,7 @@ const seedDatabase = async () => {
     // 6. Seed Students
     const studentDocsData = [
       { 
-        user: aarav1._id, 
+        user: aarav2._id, 
         studentId: 'STU-2026-0142', 
         class: class10A._id, 
         rollNumber: '15',
@@ -152,7 +152,7 @@ const seedDatabase = async () => {
         academicHistory: [{ schoolName: 'Greenwood Academy', classPassed: 'Grade 9', marksPercentage: 94.5, passingYear: '2025' }]
       },
       { 
-        user: aarav2._id, 
+        user: aarav1._id, 
         studentId: 'STU-2026-0142-2', 
         class: class10A._id, 
         rollNumber: '16',

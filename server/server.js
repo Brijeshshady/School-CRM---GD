@@ -28,6 +28,8 @@ const financeRoutes = require('./routes/financeRoutes');
 const auxiliaryRoutes = require('./routes/auxiliaryRoutes');
 const hrRoutes = require('./routes/hrRoutes');
 const visitorRoutes = require('./routes/visitorRoutes');
+const transportRoutes = require('./routes/transportRoutes');
+
 
 
 
@@ -39,6 +41,7 @@ require('./models/Parent');
 require('./models/Class');
 require('./models/Subject');
 require('./models/Assignment');
+require('./models/AssignmentSubmission');
 require('./models/Attendance');
 require('./models/Grade');
 require('./models/Ticket');
@@ -59,8 +62,12 @@ require('./models/Expense');
 require('./models/LibraryItem');
 require('./models/HostelRoom');
 require('./models/VehicleRoute');
+require('./models/DriverProfile');
+require('./models/Vehicle');
+require('./models/BusAttendance');
 require('./models/StaffPayroll');
 require('./models/Visitor');
+
 
 
 // Initialize express app
@@ -71,12 +78,19 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: [
-    "http://localhost:5173"
-  ],
+  origin: true,
   credentials: true
 })); // Enable CORS for frontend requests
 app.use(express.json()); // Parse JSON payloads
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${req.method} ${req.url} - Body:`, req.body);
+  const originalJson = res.json;
+  res.json = function (body) {
+    console.log(`[RESPONSE] ${req.method} ${req.url} - Status: ${res.statusCode} - Body:`, body);
+    return originalJson.call(this, body);
+  };
+  next();
+});
 app.use(express.urlencoded({ extended: false }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
  
@@ -110,6 +124,8 @@ app.use('/api/finance', financeRoutes);
 app.use('/api/auxiliary', auxiliaryRoutes);
 app.use('/api/hr', hrRoutes);
 app.use('/api/visitors', visitorRoutes);
+app.use('/api/transport', transportRoutes);
+
 
 
 

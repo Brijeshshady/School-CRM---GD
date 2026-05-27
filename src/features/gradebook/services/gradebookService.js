@@ -65,5 +65,22 @@ export const gradebookService = {
   publishReportCard: async (id) => {
     const res = await api.put(`/exam-grades/report-cards/${id}/publish`);
     return res.data.data;
+  },
+
+  // Exam Timetables / Schedules
+  getExamSchedules: async (filters = {}) => {
+    const res = await api.get('/exam-grades/schedules', { params: filters });
+    return res.data.data;
+  },
+
+  upsertExamSchedule: async (data) => {
+    const res = await api.post('/exam-grades/schedules', data);
+    return res.data.data;
+  },
+
+  deleteExamSchedule: async (id) => {
+    const res = await api.delete(`/exam-grades/schedules/${id}`);
+    return res.data.data;
   }
 };
+

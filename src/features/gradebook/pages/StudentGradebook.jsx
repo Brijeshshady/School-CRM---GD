@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Award, BookOpen, BarChart3, FileText, Loader2, Sparkles } from 'lucide-react';
-import { useStudentAnalytics, useExamGrades, useReportCards } from '../hooks/useGradebook';
+import { Award, BookOpen, BarChart3, FileText, Loader2, Sparkles, Calendar, Clock } from 'lucide-react';
+import { useStudentAnalytics, useExamGrades, useReportCards, useExamSchedules } from '../hooks/useGradebook';
 import { AnalyticsCharts } from '../components/AnalyticsCharts';
 import { ReportCardPrintable } from '../components/ReportCardPrintable';
 import api from '../../../lib/api';
@@ -19,15 +19,17 @@ export const StudentGradebook = () => {
   });
 
   const studentId = profile?._id;
+  const classId = profile?.class?._id;
 
-  // 2. Fetch grades and report cards
+  // 2. Fetch grades, report cards, analytics, and schedules
   const { data: grades = [], isLoading: gradesLoading } = useExamGrades({ studentId });
   const { data: reportCards = [], isLoading: reportCardsLoading } = useReportCards({ studentId });
   const { data: analytics, isLoading: analyticsLoading } = useStudentAnalytics(studentId);
+  const { data: examSchedules = [], isLoading: schedulesLoading } = useExamSchedules({ classId });
 
   const activeReportCard = reportCards[0]; // Get latest compiled report card
 
-  const isLoading = profileLoading || gradesLoading || reportCardsLoading || analyticsLoading;
+  const isLoading = profileLoading || gradesLoading || reportCardsLoading || analyticsLoading || schedulesLoading;
 
   if (isLoading) {
     return (
@@ -67,7 +69,8 @@ export const StudentGradebook = () => {
         {[
           { id: 'grades', label: 'Subject Performance', icon: BookOpen },
           { id: 'analytics', label: 'Growth Analytics', icon: BarChart3 },
-          { id: 'report-card', label: 'Official Report Card', icon: FileText }
+          { id: 'report-card', label: 'Official Report Card', icon: FileText },
+          { id: 'timetable', label: 'Exam Timetable', icon: Calendar }
         ].map(tab => (
           <button
             key={tab.id}
@@ -155,8 +158,61 @@ export const StudentGradebook = () => {
             )}
           </div>
         )}
+
+        {activeTab === 'timetable' && (
+          <div className="space-y-6">
+            {examSchedules.length > 0 ? (
+              examSchedules.map((schedule, idx) => (
+                <div key={idx} className="bg-white border border-slate-200/60 rounded-[2rem] p-6 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                    <Calendar className="w-5 h-5 text-indigo-600" />
+                    <div>
+                      <h4 className="font-extrabold text-slate-800 text-sm uppercase tracking-wide">{schedule.examType?.name} Schedule</h4>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Academic Year: {schedule.academicYear}</p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-100 rounded-2xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead className="bg-slate-50 border-b border-slate-200 font-extrabold uppercase text-slate-500">
+                        <tr>
+                          <th className="p-3">Subject</th>
+                          <th className="p-3">Exam Date</th>
+                          <th className="p-3">Timing</th>
+                          <th className="p-3">Room</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                        {schedule.timetable?.map((slot, sIdx) => (
+                          <tr key={sIdx} className="hover:bg-slate-50/50">
+                            <td className="p-3 font-bold text-slate-900">{slot.subject?.name} ({slot.subject?.code})</td>
+                            <td className="p-3 text-slate-600">{slot.date ? new Date(slot.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</td>
+                            <td className="p-3 text-slate-600 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
+                              {slot.startTime} - {slot.endTime}
+                            </td>
+                            <td className="p-3 text-slate-600">{slot.room || 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-24 bg-white border border-slate-200/60 rounded-[2.5rem] shadow-sm">
+                <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="font-bold text-slate-800">No Exam Timetables Configured</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
+                  Schedules for your upcoming examinations have not been uploaded by the administration yet.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
     </div>
   );
 };
+
